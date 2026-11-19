@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subject.name }} - Assignments{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Subject Header Banner -->
+  <div class="rounded-2xl p-6 sm:p-7 text-white shadow-md relative overflow-hidden" style="background-color: {{ subject.color }};">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <a href="{{ url_for('student_dashboard', batch_id=subject.batch_id) }}" class="inline-flex items-center space-x-1.5 text-xs font-semibold text-white/80 hover:text-white mb-2 transition">
+          <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          <span>Back to {{ subject.batch_name }}</span>
+        </a>
+        <div class="flex items-center space-x-3">
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-white/20 backdrop-blur-sm">
+            {{ subject.code or 'SUB' }}
+          </span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            {{ subject.name }}
+          </h1>
+        </div>
+        <p class="text-xs sm:text-sm text-white/90 mt-1 max-w-2xl">
+          {{ subject.description or 'All coursework tasks, homework, and lab assignments.' }}
+        </p>
+      </div>
+
+      <!-- Quick completion mini counter -->
+      <div class="bg-white/15 backdrop-blur-md px-4 py-3 rounded-xl border border-white/20 text-center sm:text-right">
+        <div class="text-xs text-white/80 font-medium">Your Progress</div>
+        <div class="text-xl font-black">{{ counts.completed or 0 }} / {{ counts.total or 0 }}</div>
+        <div class="text-[11px] text-white/90">Assignments Completed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Sort Toolbar -->
+  <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      
+      <!-- Filter Tabs -->
+      <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <a href="{{ url_for('subject_assignments', batch_id=subject.batch_id, subject_id=subject.id, filter='all', sort=current_sort, q=search_query) }}"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {% if current_filter == 'all' %}bg-indigo-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+          <span>All Tasks</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] {% if current_filter == 'all' %}bg-indigo-700 text-white{% else %}bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300{% endif %}">
+            {{ counts.total or 0 }}
+          </span>
+        </a>
+
+        <a href="{{ url_for('subject_assignments', batch_id=subject.batch_id, subject_id=subject.id, filter='incomplete', sort=current_sort, q=search_query) }}"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {% if current_filter == 'incomplete' %}bg-amber-500 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+          <span>Unmarked / Incomplete</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] {% if current_filter == 'incomplete' %}bg-amber-600 text-white{% else %}bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300{% endif %}">
+            {{ counts.incomplete or 0 }}
+          </span>
+        </a>
+
+        <a href="{{ url_for('subject_assignments', batch_id=subject.batch_id, subject_id=subject.id, filter='completed', sort=current_sort, q=search_query) }}"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {% if current_filter == 'completed' %}bg-emerald-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+          <span>Marked Completed</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] {% if current_filter == 'completed' %}bg-emerald-700 text-white{% else %}bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300{% endif %}">
+            {{ counts.completed or 0 }}
+          </span>
+        </a>
+
+        <a href="{{ url_for('subject_assignments', batch_id=subject.batch_id, subject_id=subject.id, filter='overdue', sort=current_sort, q=search_query) }}"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 {% if current_filter == 'overdue' %}bg-rose-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+          <span>Overdue</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] {% if current_filter == 'overdue' %}bg-rose-700 text-white{% else %}bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300{% endif %}">
+            {{ counts.overdue or 0 }}
+          </span>
+        </a>
+      </div>
+
+      <!-- Search & Sort Controls -->
+      <form method="GET" action="{{ url_for('subject_assignments', batch_id=subject.batch_id, subject_id=subject.id) }}" class="flex flex-col sm:flex-row items-center gap-2">
+        <input type="hidden" name="filter" value="{{ current_filter }}">
+        
+        <div class="relative w-full sm:w-48">
+          <input type="text" name="q" value="{{ search_query }}" placeholder="Search tasks..."
+            class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white focus:ring-1 focus:ring-indigo-500">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+        </div>
+
+        <select name="sort" onchange="this.form.submit()"
+          class="w-full sm:w-auto bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs py-1.5 px-3 dark:text-white font-medium focus:ring-1 focus:ring-indigo-500">
+          <option value="deadline_asc" {% if current_sort == 'deadline_asc' %}selected{% endif %}>Deadline (Soonest First)</option>
+          <option value="deadline_desc" {% if current_sort == 'deadline_desc' %}selected{% endif %}>Deadline (Latest First)</option>
+          <option value="title_asc" {% if current_sort == 'title_asc' %}selected{% endif %}>Title (A-Z)</option>
+        </select>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Assignments List -->
+  {% if assignments %}
+    <div class="space-y-4">
+      {% for a in assignments %}
+        <div id="assignment-card-{{ a.id }}" class="assignment-card bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm transition flex flex-col md:flex-row md:items-center justify-between gap-5">
+          
+          <!-- Assignment Information -->
+          <div class="space-y-2 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {% if a.is_completed %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300{% else %}bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300{% endif %}">
+                {{ 'Completed' if a.is_completed else 'Pending' }}
+              </span>
+
+              <!-- Live Countdown badge -->
+              <span data-deadline="{{ a.deadline }}" data-completed="{{ 'true' if a.is_completed else 'false' }}" class="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center space-x-1">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                <span>Due: {{ a.deadline | format_datetime }}</span>
+              </span>
+
+              {% if a.completed_at %}
+                <span class="text-[11px] text-slate-400">
+                  (Marked on {{ a.completed_at }})
+                </span>
+              {% endif %}
+            </div>
+
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              <a href="{{ url_for('assignment_detail', assignment_id=a.id) }}" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition">
+                {{ a.title }}
+              </a>
+            </h3>
+
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 line-clamp-2">
+              {{ a.description or 'No extra description provided.' }}
+            </p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center space-x-3 flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-700">
+            <a href="{{ url_for('assignment_detail', assignment_id=a.id) }}" class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 transition flex items-center space-x-1">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span>Details</span>
+            </a>
+
+            <!-- Toggle Completion Button (AJAX) -->
+            <button type="button" onclick="toggleAssignment({{ a.id }}, this)"
+              class="inline-flex items-center justify-center px-4 py-2 rounded-xl text-xs font-bold border transition shadow-sm {% if a.is_completed %}bg-emerald-600 hover:bg-emerald-700 text-white border-transparent{% else %}bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600{% endif %}">
+              {% if a.is_completed %}
+                <svg class="w-4 h-4 text-white check-animate mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span>Completed</span>
+              {% else %}
+                <div class="w-4 h-4 rounded-full border-2 border-slate-400 dark:border-slate-400 mr-1.5"></div>
+                <span>Mark as Done</span>
+              {% endif %}
+            </button>
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 space-y-3">
+      <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-400 flex items-center justify-center mx-auto">
+        <i data-lucide="check-check" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-slate-800 dark:text-slate-200 text-base">No assignments match your criteria</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+        {% if current_filter == 'completed' %}
+          You haven't marked any assignments as completed in this subject yet.
+        {% elif current_filter == 'incomplete' %}
+          Great job! You have no pending assignments in this subject.
+        {% elif current_filter == 'overdue' %}
+          No overdue assignments found.
+        {% else %}
+          There are no assignments added for this subject yet.
+        {% endif %}
+      </p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

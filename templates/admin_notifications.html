@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Live Notification Feed - Classroom Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="space-y-1">
+      <div class="flex items-center space-x-2 text-rose-500 font-bold text-xs uppercase tracking-wider">
+        <i data-lucide="bell" class="w-4 h-4"></i>
+        <span>Live Submission Activity Feed</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Classroom Notifications & Ticks
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+        Real-time audit log of every student ticking or unticking an assignment and account registrations.
+      </p>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <a href="{{ url_for('admin_notifications') }}" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 transition flex items-center space-x-1">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+        <span>Refresh Feed</span>
+      </a>
+      <a href="{{ url_for('admin_dashboard') }}" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+        Admin Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Notification Feed List -->
+  <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+    <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+      <h2 class="font-bold text-base text-slate-900 dark:text-white flex items-center space-x-2">
+        <i data-lucide="activity" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+        <span>Activity Log ({{ activities | length }})</span>
+      </h2>
+      <span class="text-xs text-slate-400">Logged chronologically</span>
+    </div>
+
+    {% if activities %}
+      <div class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for act in activities %}
+          <div class="p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition flex items-start space-x-4">
+            
+            <!-- Action Type Icon -->
+            <div class="flex-shrink-0 mt-0.5">
+              {% if act.action_type == 'assignment_marked' %}
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                </div>
+              {% elif act.action_type == 'assignment_unmarked' %}
+                <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <i data-lucide="undo-2" class="w-5 h-5"></i>
+                </div>
+              {% elif act.action_type == 'user_registered' %}
+                <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <i data-lucide="user-plus" class="w-5 h-5"></i>
+                </div>
+              {% elif act.action_type == 'user_approved' %}
+                <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <i data-lucide="shield-check" class="w-5 h-5"></i>
+                </div>
+              {% else %}
+                <div class="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <i data-lucide="bell" class="w-5 h-5"></i>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 space-y-1">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  {{ act.details }}
+                </span>
+                <span class="text-[11px] text-slate-400 flex-shrink-0">
+                  {{ act.created_at | format_datetime }}
+                </span>
+              </div>
+
+              {% if act.assignment_title %}
+                <div class="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                  Assignment: <a href="{{ url_for('assignment_detail', assignment_id=act.assignment_id) }}" class="hover:underline font-semibold">{{ act.assignment_title }}</a>
+                  &bull; <a href="{{ url_for('admin_assignment_students', assignment_id=act.assignment_id) }}" class="hover:underline text-slate-500">View Roster</a>
+                </div>
+              {% endif %}
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="p-10 text-center text-slate-400 text-sm">
+        No notifications recorded yet.
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

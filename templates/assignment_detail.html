@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}{{ a.title }} - Assignment Details{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+  <!-- Breadcrumb Navigation -->
+  <nav class="flex items-center space-x-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+    <a href="{{ url_for('student_dashboard') }}" class="hover:text-indigo-600 transition">Dashboard</a>
+    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+    <a href="{{ url_for('subject_assignments', batch_id=a.batch_id, subject_id=a.subject_id) }}" class="hover:text-indigo-600 transition">
+      {{ a.subject_name }}
+    </a>
+    <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+    <span class="text-slate-800 dark:text-slate-200 font-semibold truncate max-w-xs">{{ a.title }}</span>
+  </nav>
+
+  <!-- Assignment Card -->
+  <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 shadow-sm space-y-6">
+    
+    <!-- Top Meta -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-700">
+      <div class="space-y-1">
+        <div class="flex items-center space-x-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold text-white shadow-xs" style="background-color: {{ a.subject_color }};">
+            {{ a.subject_code or a.subject_name }}
+          </span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">{{ a.batch_name }}</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          {{ a.title }}
+        </h1>
+      </div>
+
+      <!-- Live Countdown / Deadline Card -->
+      <div class="bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 flex items-center space-x-3 flex-shrink-0">
+        <div class="p-2.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+          <i data-lucide="calendar" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Submission Deadline</div>
+          <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+            {{ a.deadline | format_datetime }}
+          </div>
+          <div data-deadline="{{ a.deadline }}" data-completed="{{ 'true' if a.is_completed else 'false' }}" class="text-[11px] font-semibold text-slate-500">
+            Checking status...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Description / Instructions -->
+    <div class="space-y-3">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+        <i data-lucide="file-text" class="w-4 h-4"></i>
+        <span>Assignment Instructions & Requirements</span>
+      </h2>
+      <div class="bg-slate-50 dark:bg-slate-900/40 p-5 rounded-xl border border-slate-100 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line">
+        {{ a.description or 'No extra instructions specified for this assignment. Please review your lecture notes and complete the task.' }}
+      </div>
+    </div>
+
+    <!-- Attached File / Download Section -->
+    {% if a.attachment_filename %}
+    <div class="space-y-2">
+      <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+        <i data-lucide="paperclip" class="w-4 h-4"></i>
+        <span>Attached File</span>
+      </h2>
+      <div class="flex items-center justify-between gap-4 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/60 rounded-xl px-5 py-4">
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="p-2.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+            <i data-lucide="file" class="w-5 h-5"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate" title="{{ a.attachment_original_name }}">
+              {{ a.attachment_original_name }}
+            </div>
+            <div class="flex items-center space-x-2 mt-0.5">
+              {% if a.attachment_type %}
+              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 uppercase">{{ a.attachment_type }}</span>
+              {% endif %}
+              {% if a.attachment_size %}
+              <span class="text-[11px] text-slate-400">{{ a.attachment_size | format_filesize }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <a href="{{ url_for('download_assignment_attachment', assignment_id=a.id) }}"
+           class="flex-shrink-0 inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-sm">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Download</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Completion Section -->
+    <div id="assignment-card-{{ a.id }}" class="bg-gradient-to-r from-slate-50 to-indigo-50/30 dark:from-slate-900/50 dark:to-indigo-950/20 p-5 sm:p-6 rounded-2xl border border-indigo-100 dark:border-indigo-950/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="space-y-1 text-center sm:text-left">
+        <div class="flex items-center justify-center sm:justify-start space-x-2">
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Your Status:</span>
+          <span class="status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {% if a.is_completed %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300{% else %}bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300{% endif %}">
+            {{ 'Completed' if a.is_completed else 'Incomplete (Pending)' }}
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          {% if a.completed_at %}
+            Marked as done on {{ a.completed_at }}. You can untick it if you need to redo it.
+          {% else %}
+            Once you finish your coursework or submission, click the button to mark it done.
+          {% endif %}
+        </p>
+      </div>
+
+      <!-- Action Button -->
+      <button type="button" onclick="toggleAssignment({{ a.id }}, this)"
+        class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-bold border transition shadow-sm {% if a.is_completed %}bg-emerald-600 hover:bg-emerald-700 text-white border-transparent{% else %}bg-indigo-600 hover:bg-indigo-700 text-white border-transparent shadow-indigo-500/20{% endif %}">
+        {% if a.is_completed %}
+          <svg class="w-5 h-5 text-white check-animate mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          <span>Completed</span>
+        {% else %}
+          <div class="w-4 h-4 rounded-full border-2 border-white/80 mr-2"></div>
+          <span>Mark as Completed</span>
+        {% endif %}
+      </button>
+    </div>
+
+    <!-- Privacy Guarantee Note -->
+    <div class="flex items-center space-x-2 text-[11px] text-slate-400 dark:text-slate-500 pt-2">
+      <i data-lucide="lock" class="w-3.5 h-3.5 flex-shrink-0"></i>
+      <span>Classroom Privacy: Only you and the classroom administrator can see whether your task is marked done. Other students cannot view your progress.</span>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

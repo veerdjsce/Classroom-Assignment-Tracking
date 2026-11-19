@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Database (Render will use persistent disk)
+classroom.db
+
+# Uploaded files (Render will use persistent disk)
+static/uploads/
+
+# Local scripts
+start_server.bat
+start_background.vbs
+stop_server.bat
+
+# Tests
+test_app.py
+verify_live.py
+
+# IDE
+.vscode/
+.idea/

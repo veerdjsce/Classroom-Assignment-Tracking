@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Classroom Dashboard - Assignments{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Student Header & Batch Selector -->
+  <div class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+    <!-- Background subtle design -->
+    <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="space-y-2">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Classroom Dashboard</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          Welcome back, {{ current_user.full_name }}!
+        </h1>
+        <p class="text-sm text-indigo-100 max-w-xl">
+          Track your assignments across all your batch subjects. Keep your tasks marked and stay ahead of deadlines.
+        </p>
+      </div>
+
+      <!-- Batch Switcher & Progress Summary -->
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 min-w-[280px]">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-indigo-200 mb-1">
+            Current Batch
+          </label>
+          <form method="GET" action="{{ url_for('student_dashboard') }}">
+            <select name="batch_id" onchange="this.form.submit()"
+              class="w-full bg-white/90 text-slate-800 text-xs font-semibold py-1.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-white">
+              {% for b in batches %}
+                <option value="{{ b.id }}" {% if b.id == selected_batch_id %}selected{% endif %}>
+                  {{ b.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+
+        <div class="sm:border-l sm:border-white/20 sm:pl-4 flex flex-col justify-center">
+          <div class="flex items-center justify-between text-xs font-semibold text-indigo-100 mb-1">
+            <span>Your Progress</span>
+            <span class="font-bold text-white">{{ overall_completed }}/{{ overall_total }}</span>
+          </div>
+          <div class="w-full bg-black/20 h-2 rounded-full overflow-hidden">
+            <div class="bg-emerald-400 h-2 rounded-full transition-all duration-500" style="width: {{ overall_pct }}%"></div>
+          </div>
+          <div class="text-[10px] text-indigo-200 mt-1">
+            {{ overall_pct }}% coursework completed
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Filter Buttons -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center space-x-2">
+      <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+        <i data-lucide="book-open" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+        <span>Subjects & Assignments</span>
+      </h2>
+      <span class="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 font-semibold text-slate-700 dark:text-slate-300">
+        {{ subjects | length }} Subjects
+      </span>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <a href="{{ url_for('all_student_assignments', filter='incomplete') }}" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 hover:bg-amber-100 transition">
+        <i data-lucide="circle-dashed" class="w-3.5 h-3.5"></i>
+        <span>View Incomplete Tasks</span>
+      </a>
+      <a href="{{ url_for('all_student_assignments', filter='completed') }}" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition">
+        <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+        <span>View Completed</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Subjects Grid -->
+  {% if subjects %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {% for sub in subjects %}
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+          
+          <!-- Subject Card Top Header with Color -->
+          <div class="p-5">
+            <div class="flex items-start justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-sm" style="background-color: {{ sub.color }};">
+                <i data-lucide="{{ sub.icon or 'book-open' }}" class="w-5 h-5"></i>
+              </div>
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                {{ sub.code or 'SUB' }}
+              </span>
+            </div>
+
+            <h3 class="font-bold text-base text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition line-clamp-1">
+              {{ sub.name }}
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+              {{ sub.description or 'Coursework modules, tasks, and submission deadlines.' }}
+            </p>
+          </div>
+
+          <!-- Progress and Action Footer -->
+          <div class="bg-slate-50 dark:bg-slate-900/40 p-5 border-t border-slate-100 dark:border-slate-700/60 space-y-3">
+            <div class="flex items-center justify-between text-xs font-semibold">
+              <span class="text-slate-600 dark:text-slate-400">Completion</span>
+              <span class="text-slate-900 dark:text-white font-bold">{{ sub.completed_assignments }}/{{ sub.total_assignments }} done</span>
+            </div>
+            
+            <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+              <div class="h-2 rounded-full transition-all duration-300" style="width: {{ sub.progress_pct }}%; background-color: {{ sub.color }};"></div>
+            </div>
+
+            <a href="{{ url_for('subject_assignments', batch_id=selected_batch_id, subject_id=sub.id) }}"
+              class="w-full mt-2 inline-flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white shadow-sm transition hover:opacity-95"
+              style="background-color: {{ sub.color }};">
+              <span>Open Subject & Tasks</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-8">
+      <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-400 flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="folder" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-slate-700 dark:text-slate-300 text-base">No subjects added for this batch yet</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        The administrator has not created subjects for this batch yet. Check back soon.
+      </p>
+    </div>
+  {% endif %}
+
+  <!-- Announcements & Active Polls Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+    
+    <!-- Classroom Announcements -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-2">
+            <div class="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+              <i data-lucide="megaphone" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white">Classroom Announcements</h3>
+          </div>
+          <a href="{{ url_for('view_announcements') }}" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+            View All &rarr;
+          </a>
+        </div>
+
+        {% if announcements %}
+          <div class="space-y-3">
+            {% for a in announcements %}
+              <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-700/60 bg-slate-50/70 dark:bg-slate-900/30 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <div class="font-bold text-xs text-slate-900 dark:text-white flex items-center space-x-1.5">
+                    {% if a.is_pinned %}
+                      <span class="text-amber-500" title="Pinned Announcement">
+                        <i data-lucide="pin" class="w-3.5 h-3.5 fill-current"></i>
+                      </span>
+                    {% endif %}
+                    <span>{{ a.title }}</span>
+                  </div>
+                  <span class="text-[10px] text-slate-400">{{ a.created_at | format_datetime }}</span>
+                </div>
+                <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">
+                  {{ a.content }}
+                </p>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-xs text-slate-500 py-6 text-center">No announcements yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Active Class Polls -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-2">
+            <div class="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400">
+              <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white">Class Polls</h3>
+          </div>
+          <a href="{{ url_for('view_polls') }}" class="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline">
+            Go to Polls &rarr;
+          </a>
+        </div>
+
+        {% if active_polls %}
+          <div class="space-y-3">
+            {% for p in active_polls %}
+              <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-700/60 bg-slate-50/70 dark:bg-slate-900/30 space-y-2">
+                <div class="font-bold text-xs text-slate-900 dark:text-white">
+                  {{ p.question }}
+                </div>
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-500 dark:text-slate-400">
+                    {% if p.user_voted %}
+                      <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center space-x-1">
+                        <i data-lucide="check" class="w-3 h-3"></i>
+                        <span>You have voted</span>
+                      </span>
+                    {% else %}
+                      <span class="text-amber-600 dark:text-amber-400 font-semibold">Voting open</span>
+                    {% endif %}
+                  </span>
+                  <a href="{{ url_for('view_polls') }}" class="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                    Vote / Results &rarr;
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-xs text-slate-500 py-6 text-center">No active polls right now.</p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

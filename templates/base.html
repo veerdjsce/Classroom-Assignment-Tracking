@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <title>{% block title %}Classroom Assignment Tracker{% endblock %}</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+
+  <script>
+    // Theme initialization
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+</head>
+<body class="h-full bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+
+  <!-- Desktop & Tablet Top Navigation -->
+  <header class="sticky top-0 z-40 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo / Brand -->
+        <div class="flex items-center space-x-3">
+          <a href="{{ url_for('index') }}" class="flex items-center space-x-2.5">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+              <i data-lucide="check-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <span class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">ClassTracker</span>
+              <span class="hidden sm:inline-block text-xs font-semibold px-2 py-0.5 rounded-full ml-1.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">Classroom</span>
+            </div>
+          </a>
+        </div>
+
+        <!-- Navigation Links (Desktop) -->
+        {% if current_user and current_user.status == 'approved' %}
+        <nav class="hidden md:flex items-center space-x-1 lg:space-x-2">
+          {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('admin_dashboard') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition {% if request.path == '/admin' %}bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50{% endif %} flex items-center space-x-1.5">
+              <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+              <span>Admin Panel</span>
+            </a>
+            <a href="{{ url_for('admin_users') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition {% if '/admin/users' in request.path %}bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50{% endif %} flex items-center space-x-1.5">
+              <i data-lucide="users" class="w-4 h-4"></i>
+              <span>Classmates & Approvals</span>
+            </a>
+            <a href="{{ url_for('admin_curriculum') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition {% if '/admin/curriculum' in request.path %}bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50{% endif %} flex items-center space-x-1.5">
+              <i data-lucide="folder-kanban" class="w-4 h-4"></i>
+              <span>Batches & Tasks</span>
+            </a>
+          {% endif %}
+
+          <!-- Student & Universal Links -->
+          <a href="{{ url_for('student_dashboard') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition {% if request.path == '/dashboard' %}bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50{% endif %} flex items-center space-x-1.5">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <a href="{{ url_for('all_student_assignments') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition {% if request.path == '/all-assignments' %}bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50{% endif %} flex items-center space-x-1.5">
+            <i data-lucide="list-checks" class="w-4 h-4"></i>
+            <span>Assignments</span>
+          </a>
+
+          {% if current_user.role != 'admin' %}
+          <a href="{{ url_for('classmates_directory') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition {% if request.path == '/classmates' %}bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50{% endif %} flex items-center space-x-1.5">
+            <i data-lucide="users" class="w-4 h-4"></i>
+            <span>Classmates</span>
+          </a>
+          {% endif %}
+
+          <a href="{{ url_for('view_polls') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition {% if request.path == '/polls' %}bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50{% endif %} flex items-center space-x-1.5">
+            <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+            <span>Polls</span>
+          </a>
+
+          <a href="{{ url_for('view_announcements') }}" class="px-3 py-2 rounded-lg text-sm font-medium transition {% if request.path == '/announcements' %}bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-semibold{% else %}text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50{% endif %} flex items-center space-x-1.5">
+            <i data-lucide="megaphone" class="w-4 h-4"></i>
+            <span>Announcements</span>
+          </a>
+        </nav>
+        {% endif %}
+
+        <!-- Right Side Icons: Notifications, Dark mode, Profile -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          
+          <!-- Theme Toggle -->
+          <button id="theme-toggle" class="p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition" title="Toggle Light/Dark Theme">
+            <i id="theme-toggle-dark-icon" data-lucide="moon" class="hidden w-5 h-5"></i>
+            <i id="theme-toggle-light-icon" data-lucide="sun" class="hidden w-5 h-5"></i>
+          </button>
+
+          {% if current_user %}
+            <!-- Admin Notification Bell -->
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('admin_notifications') }}" class="relative p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition" title="Live Activity & Assignment Ticks">
+              <i data-lucide="bell" class="w-5 h-5"></i>
+              <span id="admin-bell-badge" class="{% if unread_admin_notifications == 0 %}hidden{% endif %} absolute top-1 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform bg-rose-500 rounded-full shadow-sm animate-pulse">
+                {{ unread_admin_notifications if unread_admin_notifications <= 99 else '99+' }}
+              </span>
+            </a>
+            {% elif current_user.status == 'approved' and upcoming_student_deadlines > 0 %}
+            <!-- Student Deadlines Bell -->
+            <a href="{{ url_for('all_student_assignments', filter='incomplete') }}" class="relative p-2 rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition" title="Unmarked Assignments Due Soon!">
+              <i data-lucide="clock" class="w-5 h-5"></i>
+              <span class="absolute top-1 right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold text-white bg-amber-500 rounded-full">
+                {{ upcoming_student_deadlines }}
+              </span>
+            </a>
+            {% endif %}
+
+            <!-- User Menu -->
+            <div class="relative flex items-center space-x-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+              <a href="{{ url_for('profile') }}" class="flex items-center space-x-2 group">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold ring-2 ring-transparent group-hover:ring-indigo-400 transition">
+                  {{ current_user.full_name[0] | upper }}
+                </div>
+                <div class="hidden lg:block text-left text-xs">
+                  <div class="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 transition">{{ current_user.full_name.split()[0] }}</div>
+                  <div class="text-[10px] text-slate-500 dark:text-slate-400 capitalize">{{ current_user.role }}</div>
+                </div>
+              </a>
+              <a href="{{ url_for('logout') }}" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="Log Out">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+              </a>
+            </div>
+
+          {% else %}
+            <a href="{{ url_for('login') }}" class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white px-3 py-1.5 rounded-lg transition">Log in</a>
+            <a href="{{ url_for('register') }}" class="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-1.5 rounded-xl shadow-sm transition">Join Class</a>
+          {% endif %}
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages Banner -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="space-y-2 mb-4">
+          {% for category, message in messages %}
+            <div class="p-4 rounded-xl border flex items-center justify-between shadow-sm transition {% if category == 'success' %}bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200{% elif category == 'danger' %}bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200{% elif category == 'warning' %}bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200{% else %}bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200{% endif %}">
+              <div class="flex items-center space-x-3 text-sm font-medium">
+                <i data-lucide="{% if category == 'success' %}check-circle-2{% elif category == 'danger' %}alert-octagon{% elif category == 'warning' %}alert-triangle{% else %}info{% endif %}" class="w-5 h-5 flex-shrink-0"></i>
+                <span>{{ message }}</span>
+              </div>
+              <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Student Deadline Reminder Alert (if any assignment due soon or overdue) -->
+    {% if current_user and current_user.status == 'approved' and current_user.role != 'admin' and upcoming_student_deadlines > 0 and request.endpoint == 'student_dashboard' %}
+    <div class="mb-5 p-4 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+          <i data-lucide="alarm-clock" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="font-semibold text-sm text-amber-900 dark:text-amber-200">
+            Deadline Alert: You have {{ upcoming_student_deadlines }} unmarked assignment{{ 's' if upcoming_student_deadlines > 1 else '' }} reaching deadline!
+          </div>
+          <div class="text-xs text-amber-700 dark:text-amber-300/80">
+            Complete them on time to maintain your class submission record.
+          </div>
+        </div>
+      </div>
+      <a href="{{ url_for('all_student_assignments', filter='incomplete', sort='deadline_asc') }}" class="inline-flex items-center justify-center px-4 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition whitespace-nowrap">
+        Review Now &rarr;
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-4 pb-24 md:pb-12">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Mobile Bottom Navigation Bar (Visible on mobile/tablet) -->
+  {% if current_user and current_user.status == 'approved' %}
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex items-center justify-around text-[10px] font-medium text-slate-500 dark:text-slate-400">
+    <a href="{{ url_for('student_dashboard') }}" class="flex flex-col items-center py-1 px-2 rounded-lg {% if request.path == '/dashboard' %}text-indigo-600 dark:text-indigo-400 font-bold{% endif %}">
+      <i data-lucide="book-open" class="w-5 h-5"></i>
+      <span class="mt-0.5">Subjects</span>
+    </a>
+    <a href="{{ url_for('all_student_assignments') }}" class="flex flex-col items-center py-1 px-2 rounded-lg {% if request.path == '/all-assignments' %}text-indigo-600 dark:text-indigo-400 font-bold{% endif %}">
+      <i data-lucide="list-checks" class="w-5 h-5"></i>
+      <span class="mt-0.5">Tasks</span>
+    </a>
+    <a href="{{ url_for('view_polls') }}" class="flex flex-col items-center py-1 px-2 rounded-lg {% if request.path == '/polls' %}text-indigo-600 dark:text-indigo-400 font-bold{% endif %}">
+      <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+      <span class="mt-0.5">Polls</span>
+    </a>
+    <a href="{{ url_for('view_announcements') }}" class="flex flex-col items-center py-1 px-2 rounded-lg {% if request.path == '/announcements' %}text-indigo-600 dark:text-indigo-400 font-bold{% endif %}">
+      <i data-lucide="megaphone" class="w-5 h-5"></i>
+      <span class="mt-0.5">Notices</span>
+    </a>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('admin_dashboard') }}" class="flex flex-col items-center py-1 px-2 rounded-lg {% if '/admin' in request.path %}text-indigo-600 dark:text-indigo-400 font-bold{% endif %}">
+      <i data-lucide="shield" class="w-5 h-5"></i>
+      <span class="mt-0.5">Admin</span>
+    </a>
+    {% else %}
+    <a href="{{ url_for('profile') }}" class="flex flex-col items-center py-1 px-2 rounded-lg {% if request.path == '/profile' %}text-indigo-600 dark:text-indigo-400 font-bold{% endif %}">
+      <i data-lucide="user" class="w-5 h-5"></i>
+      <span class="mt-0.5">Profile</span>
+    </a>
+    {% endif %}
+  </nav>
+  {% endif %}
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Theme toggle button logic
+    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+    const themeToggleBtn = document.getElementById('theme-toggle');
+
+    if (document.documentElement.classList.contains('dark')) {
+      themeToggleLightIcon.classList.remove('hidden');
+    } else {
+      themeToggleDarkIcon.classList.remove('hidden');
+    }
+
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', function() {
+        themeToggleDarkIcon.classList.toggle('hidden');
+        themeToggleLightIcon.classList.toggle('hidden');
+
+        if (document.documentElement.classList.contains('dark')) {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('color-theme', 'light');
+        } else {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('color-theme', 'dark');
+        }
+      });
+    }
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

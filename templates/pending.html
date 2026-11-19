@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Request Pending - Classroom Tracker{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center py-8 px-4 sm:px-6">
+  <div class="w-full max-w-lg bg-white dark:bg-slate-800 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-xl text-center space-y-6">
+    
+    <!-- Animated Status Icon -->
+    <div class="relative inline-flex items-center justify-center">
+      <div class="w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
+        <i data-lucide="clock" class="w-10 h-10 animate-pulse"></i>
+      </div>
+      <span class="absolute top-1 right-1 flex h-4 w-4">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500"></span>
+      </span>
+    </div>
+
+    <div>
+      <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Approval Request Pending
+      </h2>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mt-2">
+        Hello <span class="font-semibold text-slate-800 dark:text-slate-200">{{ user.full_name }}</span>! Your request to join the classroom dashboard has been submitted and is currently awaiting administrator approval.
+      </p>
+    </div>
+
+    <!-- Request Details Card -->
+    <div class="bg-slate-50 dark:bg-slate-900/60 rounded-xl p-4 border border-slate-200 dark:border-slate-700/60 text-left text-xs space-y-2">
+      <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+        <span class="text-slate-500 dark:text-slate-400">Account Username:</span>
+        <span class="font-mono font-bold text-slate-800 dark:text-slate-200">@{{ user.username }}</span>
+      </div>
+      <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+        <span class="text-slate-500 dark:text-slate-400">Registered Email:</span>
+        <span class="font-medium text-slate-800 dark:text-slate-200">{{ user.email }}</span>
+      </div>
+      <div class="flex justify-between py-1 border-b border-slate-200/60 dark:border-slate-800">
+        <span class="text-slate-500 dark:text-slate-400">Requested Batch:</span>
+        <span class="font-semibold text-indigo-600 dark:text-indigo-400">{{ batch.name if batch else 'General Class' }}</span>
+      </div>
+      <div class="flex justify-between py-1">
+        <span class="text-slate-500 dark:text-slate-400">Submitted At:</span>
+        <span class="text-slate-700 dark:text-slate-300">{{ user.created_at | format_datetime }}</span>
+      </div>
+    </div>
+
+    <!-- Instructions / Help Box -->
+    <div class="bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-900/40 rounded-xl p-4 text-xs text-indigo-900 dark:text-indigo-300 text-left flex items-start space-x-2.5">
+      <i data-lucide="info" class="w-4 h-4 mt-0.5 text-indigo-600 dark:text-indigo-400 flex-shrink-0"></i>
+      <div>
+        <strong>What happens next?</strong><br>
+        The class administrator will review and grant permission to your account. As soon as the admin approves your request, simply click <strong>Check Status</strong> below to enter the classroom.
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+      <a href="{{ url_for('pending_approval') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition space-x-2">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        <span>Check Status / Refresh</span>
+      </a>
+      <a href="{{ url_for('logout') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 transition">
+        Log Out
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

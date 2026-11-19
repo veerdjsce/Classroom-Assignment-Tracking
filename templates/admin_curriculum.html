@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}Curriculum & Tasks Management - Classroom Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-bold text-xs uppercase tracking-wider">
+        <i data-lucide="folder-kanban" class="w-4 h-4"></i>
+        <span>Curriculum Administration</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        Batches, Subjects & Assignments
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+        Structure the classroom hierarchy, publish homework tasks, and assign firm deadlines.
+      </p>
+    </div>
+
+    <!-- Quick Jump Links -->
+    <div class="flex items-center space-x-2">
+      <a href="#assignments-section" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition">
+        Assignments
+      </a>
+      <a href="#subjects-section" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+        Subjects
+      </a>
+      <a href="#batches-section" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+        Batches
+      </a>
+    </div>
+  </div>
+
+  <!-- SECTION 1: ADD & MANAGE ASSIGNMENTS -->
+  <section id="assignments-section" class="space-y-5">
+    
+    <!-- Add Assignment Form Card -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+      <div class="flex items-center space-x-3 mb-5">
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+          <i data-lucide="plus-circle" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">Publish New Assignment with Deadline</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Assigned tasks will immediately appear on all enrolled students' subject boards.</p>
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('admin_create_assignment') }}" enctype="multipart/form-data" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+              Target Subject <span class="text-rose-500">*</span>
+            </label>
+            <select name="subject_id" required
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium dark:text-white focus:ring-1 focus:ring-indigo-500">
+              <option value="" disabled selected>Select subject...</option>
+              {% for s in subjects %}
+                <option value="{{ s.id }}">{{ s.batch_name }} &rarr; {{ s.name }} ({{ s.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+              Assignment Title <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" name="title" required placeholder="e.g. Binary Search Tree Implementation in C++"
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white focus:ring-1 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+              Instructions & Task Description
+            </label>
+            <textarea name="description" rows="3" placeholder="Provide complete requirements, submission rules, or references..."
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white focus:ring-1 focus:ring-indigo-500"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+              Submission Deadline (Date & Time) <span class="text-rose-500">*</span>
+            </label>
+            <input type="datetime-local" name="deadline" required
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-medium dark:text-white focus:ring-1 focus:ring-indigo-500">
+            <p class="text-[11px] text-slate-400 mt-1">Students will receive automatic countdowns and overdue warnings for this deadline.</p>
+          </div>
+        </div>
+
+        <!-- File Attachment — full width row -->
+        <div class="border border-dashed border-indigo-300 dark:border-indigo-700 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 p-4">
+          <label class="block text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 mb-2 flex items-center space-x-1.5">
+            <i data-lucide="paperclip" class="w-4 h-4"></i>
+            <span>Attach a File to this Assignment (Optional)</span>
+          </label>
+          <input type="file" name="attachment"
+            class="w-full text-sm text-slate-600 dark:text-slate-300 file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2">PDF, DOCX, ZIP, images, code files — any format up to 50 MB. Students will see a Download button on the assignment page.</p>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20 transition flex items-center space-x-1.5">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Publish Assignment</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Assignments List Table -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+      <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+        <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center space-x-2">
+          <i data-lucide="list-checks" class="w-5 h-5 text-indigo-600 dark:text-indigo-400"></i>
+          <span>Active Assignments ({{ assignments | length }})</span>
+        </h3>
+        <span class="text-xs text-slate-400">Sorted by deadline</span>
+      </div>
+
+      {% if assignments %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-700 font-bold text-slate-500 uppercase tracking-wider">
+                <th class="py-3 px-4">Title</th>
+                <th class="py-3 px-4">Subject & Batch</th>
+                <th class="py-3 px-4">Deadline</th>
+                <th class="py-3 px-4">Completed</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              {% for a in assignments %}
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                  <td class="py-3.5 px-4 font-semibold text-slate-900 dark:text-white max-w-xs">
+                    <a href="{{ url_for('assignment_detail', assignment_id=a.id) }}" class="hover:text-indigo-600 transition inline-flex items-center space-x-1.5">
+                      <span>{{ a.title }}</span>
+                      {% if a.attachment_filename %}
+                        <span title="File Attached: {{ a.attachment_original_name }}" class="text-indigo-500">
+                          <i data-lucide="paperclip" class="w-3.5 h-3.5"></i>
+                        </span>
+                      {% endif %}
+                    </a>
+                  </td>
+                  <td class="py-3.5 px-4 text-slate-600 dark:text-slate-300">
+                    <span class="font-medium text-indigo-600 dark:text-indigo-400">{{ a.subject_name }}</span>
+                    <span class="text-slate-400">({{ a.batch_name }})</span>
+                  </td>
+                  <td class="py-3.5 px-4 font-medium text-slate-700 dark:text-slate-300">
+                    {{ a.deadline | format_datetime }}
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <a href="{{ url_for('admin_assignment_students', assignment_id=a.id) }}" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 hover:underline">
+                      {{ a.completed_count }} students &rarr;
+                    </a>
+                  </td>
+                  <td class="py-3.5 px-4 text-right">
+                    <div class="flex items-center justify-end space-x-2">
+                      <a href="{{ url_for('admin_assignment_students', assignment_id=a.id) }}" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold">
+                        Roster
+                      </a>
+                      <form method="POST" action="{{ url_for('admin_delete_assignment', assignment_id=a.id) }}" onsubmit="return confirm('Permanently delete this assignment and all student submission records?');">
+                        <button type="submit" class="text-xs text-rose-500 hover:text-rose-700 font-medium">
+                          Delete
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-8 text-center text-slate-400 text-sm">
+          No assignments published yet. Use the form above to add one.
+        </div>
+      {% endif %}
+    </div>
+
+  </section>
+
+  <!-- SECTION 2: SUBJECTS & BATCHES GRID -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
+    
+    <!-- Subjects Management -->
+    <section id="subjects-section" class="space-y-4">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <i data-lucide="book-open" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900 dark:text-white">Add New Subject</h2>
+            <p class="text-xs text-slate-500">Subjects group assignments under a batch.</p>
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_create_subject') }}" class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+              Select Batch <span class="text-rose-500">*</span>
+            </label>
+            <select name="batch_id" required
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white font-medium">
+              {% for b in batches %}
+                <option value="{{ b.id }}">{{ b.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div class="col-span-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                Subject Name <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" name="name" required placeholder="e.g. Operating Systems"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                Code
+              </label>
+              <input type="text" name="code" placeholder="CS203"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                Theme Color
+              </label>
+              <input type="color" name="color" value="#4f46e5"
+                class="w-full h-9 p-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                Icon
+              </label>
+              <select name="icon" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white">
+                <option value="book-open">Book</option>
+                <option value="code">Code</option>
+                <option value="database">Database</option>
+                <option value="cpu">Hardware / CPU</option>
+                <option value="calculator">Math / Calc</option>
+                <option value="globe">Web / Network</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+              Description
+            </label>
+            <input type="text" name="description" placeholder="Brief overview of subject syllabus..."
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white">
+          </div>
+
+          <button type="submit" class="w-full py-2 px-3 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition">
+            Create Subject
+          </button>
+        </form>
+
+        <!-- Existing Subjects -->
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-700 space-y-2">
+          <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Existing Subjects ({{ subjects | length }})</div>
+          <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+            {% for s in subjects %}
+              <div class="p-2.5 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/30 flex items-center justify-between text-xs">
+                <div class="flex items-center space-x-2">
+                  <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ s.color }};"></span>
+                  <div>
+                    <span class="font-bold text-slate-900 dark:text-white">{{ s.name }}</span>
+                    <span class="text-slate-400">({{ s.code }}) &bull; {{ s.batch_name }}</span>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-slate-400">{{ s.assignment_count }} tasks</span>
+                  <form method="POST" action="{{ url_for('admin_delete_subject', subject_id=s.id) }}" onsubmit="return confirm('Delete this subject and all its assignments?');">
+                    <button type="submit" class="text-rose-500 hover:text-rose-700">&times;</button>
+                  </form>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Batches Management -->
+    <section id="batches-section" class="space-y-4">
+      <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm space-y-4">
+        <div class="flex items-center space-x-3 pb-3 border-b border-slate-100 dark:border-slate-700">
+          <div class="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900 dark:text-white">Add New Batch / Section</h2>
+            <p class="text-xs text-slate-500">Batches group your classmates and courses.</p>
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_create_batch') }}" class="space-y-3">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="col-span-2">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                Batch Name <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" name="name" required placeholder="e.g. CS 2024-2028 (Section A)"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                Code
+              </label>
+              <input type="text" name="code" placeholder="CS-A"
+                class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+              Description / Academic Year
+            </label>
+            <input type="text" name="description" placeholder="e.g. 4th Semester CSE morning shift..."
+              class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs dark:text-white">
+          </div>
+
+          <button type="submit" class="w-full py-2 px-3 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-700 transition">
+            Create Batch
+          </button>
+        </form>
+
+        <!-- Existing Batches -->
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-700 space-y-2">
+          <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Existing Batches ({{ batches | length }})</div>
+          <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+            {% for b in batches %}
+              <div class="p-2.5 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/30 flex items-center justify-between text-xs">
+                <div>
+                  <span class="font-bold text-slate-900 dark:text-white">{{ b.name }}</span>
+                  <div class="text-[11px] text-slate-400">{{ b.student_count }} students &bull; {{ b.subject_count }} subjects</div>
+                </div>
+                <form method="POST" action="{{ url_for('admin_delete_batch', batch_id=b.id) }}" onsubmit="return confirm('Delete this batch? All associated subjects and assignments will be removed.');">
+                  <button type="submit" class="text-rose-500 hover:text-rose-700">&times;</button>
+                </form>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</div>
+{% endblock %}
